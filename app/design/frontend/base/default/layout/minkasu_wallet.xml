@@ -6,6 +6,11 @@
                 <action method="setTemplate" ifconfig="payment/minkasu_wallet/active">
                     <template>minkasu/wallet/pay.phtml</template>
                 </action>
+		<block type="minkasu_wallet/pay" name="checkout.cart.methods.minkasu_wallet.estimate_box">
+			<action method="setTemplate" ifconfig="payment/minkasu_wallet/active">
+				<template>minkasu/wallet/estimate_box.phtml</template>
+			</action>
+		</block>
             </block>
         </reference>
     </checkout_cart_index>

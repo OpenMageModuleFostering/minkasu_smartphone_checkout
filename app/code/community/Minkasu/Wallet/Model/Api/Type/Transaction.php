@@ -68,7 +68,7 @@ class Minkasu_Wallet_Model_Api_Type_Transaction extends Minkasu_Wallet_Model_Api
             'operation' => self::OPERATION_CREATE,
             'amount' => $walletHelper->convertDollarsToCents($quote->getGrandTotal()),
             'merchant_acct_id' => $apiHelper->getApiAccountId(),
-            'merchant_bill_number' => $quote->getId(),
+            'merchant_bill_number' => -1, // Always initialize with invalid number. Will update later with order id when available
             'minkasu_token' => $apiHelper->getApiToken(),
             'beta_code' => 'mkbeta3314'
         );

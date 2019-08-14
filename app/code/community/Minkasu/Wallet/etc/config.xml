@@ -94,6 +94,7 @@
     <default>
         <payment>
             <minkasu_wallet>
+                <mode>0</mode>
                 <account_id backend_model="adminhtml/system_config_backend_encrypted"/>
                 <active>0</active>
                 <gateway_url>https://transactions.minkasu.com</gateway_url>
@@ -102,6 +103,7 @@
                 <title>Minkasu Smartphone Checkout</title>
                 <payment_action>authorize</payment_action>
                 <token backend_model="adminhtml/system_config_backend_encrypted"/>
+                <estimate_enabled>1</estimate_enabled>
             </minkasu_wallet>
         </payment>
     </default>

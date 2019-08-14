@@ -7,33 +7,86 @@ $chko_session = Mage::getSingleton('checkout/session');
 $minkasu_amount = $chko_session->getData('minkasu_amount');
 $minkasu_bill_number = $chko_session->getData('minkasu_bill_number');
 $minkasu_txn_id = $chko_session->getData('minkasu_txn_id');
-
+$minkasu_exp_zip = $chko_session->getData('minkasu_exp_zip');
+$minkasu_exp_state = $chko_session->getData('minkasu_exp_state');
 
 $shipping_method = $chko_session->getData('minkasu_shipping_method');
 $shipping_estimated = $chko_session->getData('minkasu_shipping_estimated');
+
 $quote = $chko_session->getQuote();
 
 $shipping_estimate_not_needed = ($quote->isVirtual() || $shipping_estimated);
 
-$chkout_btn_id = "button-mk-chkout";
+$address = $quote->getShippingAddress();
 
-?>
+if ($address != NULL) {
+     $estimatedAddress = $address->exportCustomerAddress();
+     if ($estimatedAddress != NULL) {
+         $data = $estimatedAddress->getData();
+    	 $estimate_postcode = $data["postcode"];
+    }
+}
 
-<?php
+$rates = $address->collectShippingRates()->getGroupedAllShippingRates();
+
+$shipping_options = array();
+
+foreach ($rates as $carrier) {
+     foreach ($carrier as $rate) {
+      	  array_push($shipping_options, $rate->getData());
+     }
+}
+
+if ($shipping_estimated){
+   $current_shipping_option_code = $address->getShippingMethod();
+}
+
+
 /** @var $_apiHelper Minkasu_Wallet_Helper_Api */
 $_apiHelper = Mage::helper('minkasu_wallet/api');
 $_apiGatewayUrl = $_apiHelper->getApiGatewayUrl();
-?>
-<link href="<?php echo $_apiGatewayUrl ?>/scripts/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-<div class="row">
-    <div class="col-sm-12" style="text-align:right" id="minkasu_payment_div"></div>
-</div>
+$_apiEstimateEnabled = $_apiHelper->isApiEstimateEnabled();
 
-<div class="buttons" style="height: 45px;">
-  <div class="right">
-    <input type="button" value="Checkout with Smart Phone (Minkasu)" id=<?php echo $chkout_btn_id ?> class="button" />
-  </div>
-</div>
+$show_minkasu_estimate_box = $_apiEstimateEnabled;
+
+$regionCollection = Mage::getModel('directory/region_api')->items("US");
+
+$coupon_code = $quote->getCouponCode();
+
+?>
+
+<script>
+	
+	var shipping_option_rates = [];
+
+	<?php foreach ($shipping_options as $shipping_option) { ?>
+
+	      shipping_option_rates.push({
+		title: '<?php echo $shipping_option['method_title'] ?>',
+		 code: '<?php echo $shipping_option['code'] ?>',
+		price: parseFloat('<?php echo $shipping_option['price'] ?>')
+	      });
+
+	<?php } ?> 
+	var current_shipping_option_code = "";
+	<?php if ($shipping_estimated) { ?>
+	      current_shipping_option_code = '<?php echo $current_shipping_option_code; ?>';
+	<?php } ?>	
+
+	region_ids = {};
+	<?php foreach($regionCollection as $region) { ?>
+
+      	      region_ids['<?php echo $region['code'];?>'] = <?php echo $region['region_id']; ?>;
+
+	<?php } ?>
+
+</script>
+
+<link href="<?php echo $_apiGatewayUrl ?>/scripts/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+<?php echo $this->getChildHtml('checkout.cart.methods.minkasu_wallet.estimate_box') ?>
+
 
 <script type="text/javascript">
 
@@ -48,7 +101,6 @@ var resolve_dollar_sym = false;
 if (typeof $ !== 'undefined') {
    resolve_dollar_sym = true;
 }
-
 
 </script>
 
@@ -73,24 +125,259 @@ if (resolve_jquery_conflict) {
 
 (function($) {
 
+var _getStateAndCityFromZip = function(zip, cb_fn) {
+
+    var params = {
+    type: 'GET',
+    url: window.location.protocol + '//maps.googleapis.com/maps/api/geocode/json?address=' + zip,
+    success: function(response, textStatus, xhr) {
+        if (response.status != "OK") {
+	   cb_fn(response.status, null);
+	}
+	var formatted_address = response.results[0].formatted_address; 
+	//window.alert(formatted_address); 
+	//formatted address = City, ST zip, USA
+	var fa_parts = formatted_address.split(",");
+	var city_str = fa_parts[0];
+	var state_short = (fa_parts[1].trim().split(" "))[0];
+	address_info = {city: city_str, state_code: state_short, country: "United States", zip: zip}; 
+	cb_fn(null, address_info);
+    },
+    error: function(XMLHttpRequest, textStatus) { 
+	cb_fn(textStatus, null);
+    }
+    };
+    jQuery.ajax(params);
+
+}
+
+var updateCartPriceEstimateWithShippingOption = function(shipping_code) {
+
+    var req_data = { };
+    req_data["estimate_method"] = shipping_code;
+    req_data["do"] = "Update Total";
+
+    $("#mk_shipping_est_table").find("#inprogress_indicator").show();
+
+    $.ajax({
+            url: '<?php echo $this->getUrl("checkout/cart/estimateUpdatePost/") ?>',
+            type:'get',
+            data: $.param(req_data),
+            success: function(resp) {
+	    	//window.alert("Done");
+	    	$("#mk_shipping_est_table").find("#inprogress_indicator").hide();
+	        location.reload();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+	    	   errorMsg = "Error getting cart estimates from server: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+		   window.alert(errorMsg);
+		   $("#mk_shipping_est_table").find("#inprogress_indicator").hide();
+		   return;
+            }
+    });
+
+};
+
+var showShippingOptions = function() {
+
+    var so_el = $("#mk_shipping_est_table").find("#shipping_options_cell");
+    so_el.empty();
+    var shipping_option_elems = "";
+    for (i = 0; i < shipping_option_rates.length; i++) {
+    	next_shipping = shipping_option_rates[i];
+    	var checked_str = "";
+    	if (next_shipping["code"] == current_shipping_option_code) {
+           // checked_str = "checked";
+           checked_str = "selected";
+	}
+    	shipping_option_elems += "<option value=\"" + i + "\" " + checked_str + ">" + shipping_option_rates[i].title + "</option>";
+    }
+
+    so_el.append("<select name=\"mk_shipping_option\" " +
+        		  "style=\"background-color: white; border-color: #999999; box-sizing: content-box; color: #333333; " +
+            		  "font-family: Open Sans; font-size: 13px; height: auto; margin: 0px; padding: 4px; width: 100%\">" + shipping_option_elems + "</select>");
+    so_el.find('[name="mk_shipping_option"]').change(function() {
+        var current_shipping_option = $(this).val();
+    	updateCartPriceEstimateWithShippingOption(shipping_option_rates[current_shipping_option].code);
+    });
+    $("#mk_shipping_est_table").find("#shipping_options_row").show();
+    $("#mk_shipping_est_table").find("#discount_code_row").show();
+}
+
+var getShippingRates = function(cb_fn) {
+
+    $.ajax({
+            url: '<?php echo $this->getUrl("minkasu_wallet/payment/getShippingRates") ?>',
+            type:'get',
+            success: function(resp) {
+
+	    	shipping_option_rates = [];
+	    	var current_shipping_option_valid = false;
+		for (var i = 0; i < resp.length; i++) {
+		    shipping_option_rates.push({
+			title: resp[i].method_title,
+			 code: resp[i].code,
+			price: parseFloat(resp[i].price)
+			});			 
+		    if (current_shipping_option_code == resp[i].code) {
+		       current_shipping_option_valid = true;
+		    } 
+		}
+		if (!current_shipping_option_valid) {
+		   current_shipping_option_code = shipping_option_rates[0].code;
+		}
+		cb_fn({status: "success"}); 		
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+	    	   errorMsg = "Error getting shipping options: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+		   window.alert(errorMsg);
+		   cb_fn({status: "error"});
+            }
+    });
+
+};
+
+
+var updateCartPriceEstimateWithZip = function(zip) {
+
+    jQuery.cors = true;
+    var req_data = { };
+
+    _getStateAndCityFromZip(zip, function(error, address_info) {
+
+    if (error) {
+       errorMsg = "Error looking up zip code: " + error;
+       window.alert(errorMsg);
+       return;	    
+   }
+
+   req_data["country_id"] = "US";
+   req_data["region_id"] = region_ids[address_info.state_code];
+   req_data["estimate_postcode"] = zip;
+
+   $("#mk_shipping_est_table").find("#inprogress_indicator").show();
+
+   $.ajax({
+            url: '<?php echo $this->getUrl("checkout/cart/estimatePost/") ?>',
+            type:'post',
+            data: $.param(req_data),
+            success: function(resp) {
+		getShippingRates(function(result) {
+			if (result.status != "success") {
+			   $("#mk_shipping_est_table").find("#inprogress_indicator").hide();	   
+			   return;
+			}
+			updateCartPriceEstimateWithShippingOption(current_shipping_option_code);
+		});
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+	    	   errorMsg = "Error getting cart estimates from server: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+		   window.alert(errorMsg);
+		   $("#mk_shipping_est_table").find("#inprogress_indicator").hide();
+		   return;
+            }
+	 });
+    });
+};
+
+var updateCartPriceEstimateWithDiscount = function(discount_code) {
+
+    jQuery.cors = true;
+    var req_data = { };
+
+    if (!discount_code || discount_code.length == 0) {
+        req_data["remove"] = "1";
+    } else {
+        req_data["coupon_code"] = discount_code;
+    }
+
+    $("#mk_shipping_est_table").find("#inprogress_indicator").show();
+
+    $.ajax({
+        url: '<?php echo $this->getUrl("checkout/cart/couponPost/") ?>',
+        type:'post',
+        data: $.param(req_data),
+        success: function(resp) {
+            window.location.reload();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            errorMsg = "Error apply discount code: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+            window.alert(errorMsg);
+            $("#mk_shipping_est_table").find("#inprogress_indicator").hide();
+            return;
+        }
+    });
+};
+
+var get_shipping_zip_code = function() {
+    var ship_zip_elem = $("#mk_shipping_est_table").find("#ship_zip");
+    var ship_zip_val = (ship_zip_elem.val() == "Zip code")? "" : ship_zip_elem.val();
+    return ship_zip_val;
+}
+
+var resetShippingZipCode = function() {
+    var shipZipElem = $("#mk_shipping_est_table").find("#ship_zip");
+    shipZipElem.val("Zip code");
+    shipZipElem.css("font-style", "italic");
+    shipZipElem.css("color", "#999999");
+}
+
+var get_discount_code = function() {
+    var discount_code_elem = $("#mk_shipping_est_table").find("#discount_code");
+    var discount_code_val = discount_code_elem.val();
+    return discount_code_val;
+}
+
+var resetDiscountCode = function() {
+    var shipZipElem = $("#mk_shipping_est_table").find("#discount_code");
+    shipZipElem.val("Coupon");
+    shipZipElem.css("font-style", "italic");
+    shipZipElem.css("color", "#999999");
+}
+
+var hide_default_estimate_block = false;
+
 var minkasu_session_ready_for_chkout = function() {
 
     <?php if ($shipping_estimate_not_needed): ?>
         return true;
     <?php else: ?>
-        alert("Please estimate shipping and taxes and retry.");
+        if (hide_default_estimate_block && $(".shipping").is(":hidden")) {
+            $(".shipping").show("slow", function() {
+                alert("Please estimate shipping and taxes and retry.");
+            });
+        } else {
+            alert("Please estimate shipping and taxes and retry.");
+        }
         return false;
     <?php endif; ?>
 
 };
 
+
+
 var minkasu_get_txnid_fn = function(mk_data) {
 
   <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
-     <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
-         mk_data.error("Transaction id requested when already present.");
-         return;
-     <?php else: ?>
+    <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
+        <?php
+            $data = NULL;
+            $shippingAddress = $quote->getShippingAddress();
+            if ($shippingAddress != NULL) {
+                $expectedAddress = ($shippingAddress->exportCustomerAddress());
+                if ($expectedAddress != NULL) {
+                    $data = $expectedAddress->getData();
+                }
+            }
+            if (($data != NULL) &&
+                ($minkasu_exp_zip && ($minkasu_exp_zip == $data["postcode"])) &&
+                ($minkasu_exp_state && ($minkasu_exp_state == $data["region"]))): ?>
+                 console.log("Transaction id requested when already present.");
+                 mk_data.error("Transaction id requested when already present.");
+                 return;
+        <?php endif; ?>
+    <?php endif; ?>
+          console.log("Updating transaction...");
           $.ajax({
                url: '<?php echo $this->getUrl('minkasu_wallet/transaction/update') ?>',
                type: 'post',
@@ -111,8 +398,8 @@ var minkasu_get_txnid_fn = function(mk_data) {
                }
           });
        return;
-     <?php endif; ?>
    <?php else: ?>
+        console.log("Creating transaction...");
         $.ajax({
             url: '<?php echo $this->getUrl('minkasu_wallet/transaction/create') ?>',
             type: 'post',
@@ -138,13 +425,87 @@ var minkasu_get_txnid_fn = function(mk_data) {
 
 
 $(document).ready(function() {
+     console.log("$_apiEstimateEnabled: " + <?php echo ($_apiEstimateEnabled)? "true":"false" ?>);
+     if (hide_default_estimate_block) {
+         // Hide the "Checkout with Multiple Addresses" option
+         // $(".method-checkout-cart-methods-multishipping").hide();
+         if ($("#co-shipping-method-form").length == 0) {
+             $(".shipping").hide();
+         }
+     }
      var minkasu_txn_id_good_for_use = false;
-        <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
+        <?php if ($minkasu_txn_id): ?>
             <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
-              minkasu_txn_id_good_for_use = true;
+                <?php
+                    $data = NULL;
+                    $shippingAddress = $quote->getShippingAddress();
+	                if ($shippingAddress != NULL) {
+	                    $expectedAddress = ($shippingAddress->exportCustomerAddress());
+	                    if ($expectedAddress != NULL) {
+	                        $data = $expectedAddress->getData();
+	                    }
+	                }
+                    if (($data != NULL) &&
+                        ($minkasu_exp_zip && ($minkasu_exp_zip == $data["postcode"])) &&
+                        ($minkasu_exp_state && ($minkasu_exp_state == $data["region"]))): ?>
+                        minkasu_txn_id_good_for_use = true;
+                <?php endif; ?>
         <?php endif; ?>
         <?php endif; ?>
 
+        $("#ship_zip").focus(function() {
+            if ($(this).val() == "Zip code" && $(this).css("font-style") == "italic") {
+                $(this).val("");
+                $(this).css("font-style", "normal");
+                $(this).css("color", "#333333");
+            }
+        });
+
+        $("#ship_zip").blur(function() {
+            if ($(this).val().length == 0) {
+                resetShippingZipCode();
+            }
+        });
+
+        <?php if ($shipping_estimated) : ?>
+            $("#mk_shipping_est_table").find("#ship_zip").val('<?php echo $estimate_postcode; ?>');
+            $("#mk_shipping_est_table").find("#ship_zip").css("font-style", "normal");
+            $("#mk_shipping_est_table").find("#ship_zip").css("color", "#333333");
+            showShippingOptions();
+        <?php endif; ?>
+
+        $("#mk_cart_est_btn").click(function() {
+            updateCartPriceEstimateWithZip(get_shipping_zip_code());
+        });
+
+        $("#discount_code").focus(function() {
+            if ($(this).val() == "Coupon" && $(this).css("font-style") == "italic") {
+                $(this).val("");
+                $(this).css("font-style", "normal");
+                $(this).css("color", "#333333");
+            }
+        });
+
+        $("#discount_code").blur(function() {
+            if ($(this).val().length == 0) {
+                resetDiscountCode();
+            }
+        });
+
+        <?php if ($coupon_code) : ?>
+            $("#discount_txt").text("Remove discount");
+            $("#discount_code").prop("disabled", true);
+            $("#mk_cart_apply_btn").prop("value", "Remove");
+            $("#mk_shipping_est_table").find("#discount_code").val('<?php echo $coupon_code; ?>');
+            $("#mk_shipping_est_table").find("#discount_code").css("font-style", "normal");
+            $("#mk_shipping_est_table").find("#discount_code").css("color", "#333333");
+        <?php endif; ?>
+
+        $("#mk_cart_apply_btn").click(function() {
+            updateCartPriceEstimateWithDiscount(($("#discount_code").prop("disabled"))? null : get_discount_code());
+        });
+
+        console.log("minkasu_txn_id_good_for_use: " + minkasu_txn_id_good_for_use);
         $.getScript('<?php echo $_apiGatewayUrl ?>/scripts/minkasu-1.2.js', function() {
 
                     var payment_args = {

@@ -18,6 +18,8 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
 	   $expectedAddress = ($shippingAddress->exportCustomerAddress());
 	   if ($expectedAddress != NULL) {
 	      $data = $expectedAddress->getData();
+          $checkoutSession->setData('minkasu_exp_zip', $data["postcode"]);
+          $checkoutSession->setData('minkasu_exp_state', $data["region"]);
 	      $expectedAddressInfo = array (
 	      	'zip' => $data["postcode"],
 		'state' => $data["region"]
@@ -37,7 +39,8 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
             $transactionInfo = $client->getType('transaction')->createTransaction($quote, $expectedAddressInfo);
 
             $checkoutSession->setData('minkasu_amount', $quote->getGrandTotal());
-            $checkoutSession->setData('minkasu_bill_number', $quote->getId());
+            //TODO:AP:quoteId should be used as idempotency id down-the-road
+            //$checkoutSession->setData('minkasu_bill_number', $quote->getId());
             $checkoutSession->setData('minkasu_txn_id', $transactionInfo['txn_id']);
             $checkoutSession->setData('minkasu_payment_token',$transactionInfo['payment_token']);
             $result = array(
@@ -76,6 +79,8 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
 	   $expectedAddress = ($shippingAddress->exportCustomerAddress());
 	   if ($expectedAddress != NULL) {
 	      $data = $expectedAddress->getData();
+          $checkoutSession->setData('minkasu_exp_zip', $data["postcode"]);
+          $checkoutSession->setData('minkasu_exp_state', $data["region"]);
 	      $expectedAddressInfo = array (
 	      	'zip' => $data["postcode"],
 		'state' => $data["region"]
@@ -99,7 +104,8 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
                 ->updateTransaction($minkasuTransactionId, $minkasuTransactionData, $expectedAddressInfo);
 
             $checkoutSession->setData('minkasu_amount', $quote->getGrandTotal());
-            $checkoutSession->setData('minkasu_bill_number', $quote->getId());
+            //TODO:AP:quoteId should be used as idempotency id down-the-road
+            //$checkoutSession->setData('minkasu_bill_number', $quote->getId());
             $checkoutSession->setData('minkasu_txn_id', $transactionInfo['txn_id']);
 	    // Payment token will not be returned on an update transaction.
 	    // Overwriting existing token with null causes later auth to fail.

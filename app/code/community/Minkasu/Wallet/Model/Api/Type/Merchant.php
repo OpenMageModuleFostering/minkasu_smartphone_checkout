@@ -78,6 +78,8 @@ class Minkasu_Wallet_Model_Api_Type_Merchant extends Minkasu_Wallet_Model_Api_Ty
             'login_id' => $gatewayData['login_id'],
             'key' => $gatewayData['key'],
             'test_mode' => $gatewayData['test_mode'],
+            'merchant_acct_id' => $apiHelper->getApiAccountId(),
+            'minkasu_token' => $apiHelper->getApiToken(),
             ':id' => $apiHelper->getApiAccountId(),
             ':action' => 'gateway',
             'headers' => array(

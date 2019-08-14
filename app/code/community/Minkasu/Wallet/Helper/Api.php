@@ -4,10 +4,12 @@ class Minkasu_Wallet_Helper_Api extends Mage_Core_Helper_Data
     /**
      * Xml paths
      */
-    const XML_PATH_API_GATEWAY_URL = 'payment/minkasu_wallet/gateway_url';
-    const XML_PATH_API_ACCOUNT_ID  = 'payment/minkasu_wallet/account_id';
-    const XML_PATH_API_TOKEN       = 'payment/minkasu_wallet/token';
-    const XML_PATH_API_ACTIVE      = 'payment/minkasu_wallet/active';
+    const XML_PATH_API_GATEWAY_URL         = 'payment/minkasu_wallet/gateway_url';
+    const XML_PATH_API_ACCOUNT_ID          = 'payment/minkasu_wallet/account_id';
+    const XML_PATH_API_TOKEN               = 'payment/minkasu_wallet/token';
+    const XML_PATH_API_ACTIVE              = 'payment/minkasu_wallet/active';
+    const XML_PATH_API_MODE                = 'payment/minkasu_wallet/mode';
+    const XML_PATH_API_ESTIMATE_ENABLED    = 'payment/minkasu_wallet/estimate_enabled';
 
     /**
      * Minkasu API log filename
@@ -90,5 +92,21 @@ class Minkasu_Wallet_Helper_Api extends Mage_Core_Helper_Data
     public function isApiActive()
     {
         return Mage::getStoreConfigFlag(self::XML_PATH_API_ACTIVE);
+    }
+
+    /**
+     * @return int
+     */
+    public function getApiMode()
+    {
+        return (int) Mage::getStoreConfigFlag(self::XML_PATH_API_MODE);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isApiEstimateEnabled()
+    {
+        return Mage::getStoreConfigFlag(self::XML_PATH_API_ESTIMATE_ENABLED);
     }
 }

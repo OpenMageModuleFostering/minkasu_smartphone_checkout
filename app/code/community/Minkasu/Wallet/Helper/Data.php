@@ -53,6 +53,8 @@ class Minkasu_Wallet_Helper_Data extends Mage_Payment_Helper_Data
         $session->unsetData('minkasu_bill_number');
         $session->unsetData('minkasu_txn_id');
         $session->unsetData('minkasu_payment_token');
+        $session->unsetData('minkasu_est_zip');
+        $session->unsetData('minkasu_est_state');
         return $this;
     }
 }

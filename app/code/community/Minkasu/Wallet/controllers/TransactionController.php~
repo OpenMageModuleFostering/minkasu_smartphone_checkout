@@ -12,6 +12,19 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
         $quote = $cart->getQuote();
         $checkoutSession = $cart->getCheckoutSession();
 
+	$expectedAddressInfo = NULL;
+	$shippingAddress = $quote->getShippingAddress();
+	if ($shippingAddress != NULL){
+	   $expectedAddress = ($shippingAddress->exportCustomerAddress());
+	   if ($expectedAddress != NULL) {
+	      $data = $expectedAddress->getData();
+	      $expectedAddressInfo = array (
+	      	'zip' => $data["postcode"],
+		'state' => $data["region"]
+	   	);
+	   }
+	}
+
         try {
             /** @var $session Mage_Core_Model_Session */
             $session = Mage::getSingleton('core/session');
@@ -21,10 +34,11 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
 
             /** @var $client Minkasu_Wallet_Model_Api_Client */
             $client = Mage::getModel('minkasu_wallet/api_client');
-            $transactionInfo = $client->getType('transaction')->createTransaction($quote);
+            $transactionInfo = $client->getType('transaction')->createTransaction($quote, $expectedAddressInfo);
 
             $checkoutSession->setData('minkasu_amount', $quote->getGrandTotal());
-            $checkoutSession->setData('minkasu_bill_number', $quote->getId());
+            //TODO:AP:quoteId should be used as idempotency id down-the-road
+            //$checkoutSession->setData('minkasu_bill_number', $quote->getId());
             $checkoutSession->setData('minkasu_txn_id', $transactionInfo['txn_id']);
             $checkoutSession->setData('minkasu_payment_token',$transactionInfo['payment_token']);
             $result = array(
@@ -57,6 +71,19 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
         $minkasuTransactionData = array('amount' => $walletHelper->convertDollarsToCents($quote->getGrandTotal()));
         $minkasuTransactionId = $checkoutSession->getData('minkasu_txn_id');
 
+	$expectedAddressInfo = NULL;
+	$shippingAddress = $quote->getShippingAddress();
+	if ($shippingAddress != NULL){
+	   $expectedAddress = ($shippingAddress->exportCustomerAddress());
+	   if ($expectedAddress != NULL) {
+	      $data = $expectedAddress->getData();
+	      $expectedAddressInfo = array (
+	      	'zip' => $data["postcode"],
+		'state' => $data["region"]
+	   	);
+	   }
+	}
+
         try {
             /** @var $session Mage_Core_Model_Session */
             $session = Mage::getSingleton('core/session');
@@ -70,12 +97,14 @@ class Minkasu_Wallet_TransactionController extends Mage_Core_Controller_Front_Ac
             /** @var $client Minkasu_Wallet_Model_Api_Client */
             $client = Mage::getModel('minkasu_wallet/api_client');
             $transactionInfo = $client->getType('transaction')
-                ->updateTransaction($minkasuTransactionId, $minkasuTransactionData);
+                ->updateTransaction($minkasuTransactionId, $minkasuTransactionData, $expectedAddressInfo);
 
             $checkoutSession->setData('minkasu_amount', $quote->getGrandTotal());
             $checkoutSession->setData('minkasu_bill_number', $quote->getId());
             $checkoutSession->setData('minkasu_txn_id', $transactionInfo['txn_id']);
-            $checkoutSession->setData('minkasu_payment_token',$transactionInfo['payment_token']);
+	    // Payment token will not be returned on an update transaction.
+	    // Overwriting existing token with null causes later auth to fail.
+            //$checkoutSession->setData('minkasu_payment_token',$transactionInfo['payment_token']);
             $result = array(
                 'txn_id' => $transactionInfo['txn_id'],
                 'payment_code' => $transactionInfo['payment_code'],

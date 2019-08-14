@@ -55,6 +55,7 @@ class Minkasu_Wallet_Adminhtml_Minkasu_Wallet_MerchantController extends Mage_Ad
                 'business_name' => $postData['name'],
                 'email' => $postData['email'],
                 'phone' => $postData['phone'],
+		'store_url' => Mage::getBaseUrl()
             );
             $gatewayData = array(
                 'login_id' => $postData['authNet_api_login_id'],
