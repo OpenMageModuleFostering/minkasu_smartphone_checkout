@@ -1,0 +1,9 @@
+<?php /** @var $this Minkasu_Wallet_Block_Adminhtml_Merchant_Create_Success */ ?>
+
+<p><?php echo $this->__('Account Id:') ?> <?php echo $this->getApiAccountId() ?></p>
+<p><?php echo $this->__('Account Token: ') ?> <?php echo $this->getApiToken() ?></p>
+<script type="text/javascript">
+    var parentDocument = window.parent.document;
+    parentDocument.getElementById('payment_minkasu_wallet_account_id').value = '<?php echo $this->getApiAccountId() ?>';
+    parentDocument.getElementById('payment_minkasu_wallet_token').value = '<?php echo $this->getApiToken() ?>';
+</script>

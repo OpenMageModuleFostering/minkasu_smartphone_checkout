@@ -1,0 +1,11 @@
+<config>
+    <modules>
+        <Minkasu_Wallet>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Mage_Payment />
+            </depends>
+        </Minkasu_Wallet>
+    </modules>
+</config>

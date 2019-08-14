@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <adminhtml_system_config_edit>
+        <reference name="head">
+            <action method="addItem">
+                <type>js_css</type>
+                <name>prototype/windows/themes/default.css</name>
+            </action>
+            <action method="addCss">
+                <name>lib/prototype/windows/themes/magento.css</name>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="adminhtml/template" name="minkasu_wallet.merchant.popup" template="minkasu/wallet/merchant/popup.phtml"/>
+        </reference>
+    </adminhtml_system_config_edit>
+
+    <adminhtml_minkasu_wallet_merchant_create>
+        <reference name="root">
+            <action method="setTemplate">
+                <path>empty.phtml</path>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="core/messages" name="messages" as="messages"/>
+            <block type="minkasu_wallet/adminhtml_merchant_create" name="minkasu_wallet.merchant.create"/>
+        </reference>
+        <remove name="after_body_start"/>
+        <remove name="global_notices"/>
+        <remove name="before_body_end"/>
+    </adminhtml_minkasu_wallet_merchant_create>
+
+    <adminhtml_minkasu_wallet_merchant_edit>
+        <reference name="root">
+            <action method="setTemplate">
+                <path>empty.phtml</path>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="core/messages" name="messages" as="messages"/>
+            <block type="minkasu_wallet/adminhtml_merchant_edit" name="minkasu_wallet.merchant.edit"/>
+        </reference>
+        <remove name="after_body_start"/>
+        <remove name="global_notices"/>
+        <remove name="before_body_end"/>
+    </adminhtml_minkasu_wallet_merchant_edit>
+
+    <adminhtml_minkasu_wallet_merchant_successcreate>
+        <reference name="root">
+            <action method="setTemplate">
+                <path>empty.phtml</path>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="core/messages" name="messages" as="messages"/>
+            <block type="minkasu_wallet/adminhtml_merchant_create_success" name="minkasu_wallet.merchant.create.success" template="minkasu/wallet/merchant/create/success.phtml"/>
+        </reference>
+        <remove name="after_body_start"/>
+        <remove name="global_notices"/>
+        <remove name="before_body_end"/>
+    </adminhtml_minkasu_wallet_merchant_successcreate>
+
+    <adminhtml_minkasu_wallet_merchant_successupdate>
+        <reference name="root">
+            <action method="setTemplate">
+                <path>empty.phtml</path>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="core/messages" name="messages" as="messages"/>
+            <block type="adminhtml/template" name="minkasu_wallet.merchant.update.success"/>
+        </reference>
+        <remove name="after_body_start"/>
+        <remove name="global_notices"/>
+        <remove name="before_body_end"/>
+    </adminhtml_minkasu_wallet_merchant_successupdate>
+</layout>

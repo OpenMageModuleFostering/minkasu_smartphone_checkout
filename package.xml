@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package>
+    <name>minkasu_smartphone_checkout</name>
+    <version>1.0.0</version>
+    <stability>stable</stability>
+    <license>MITL</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>Enjoy higher conversion and greater security by offering a smartphone checkout option for your customers </summary>
+    <description>Enjoy higher conversion and greater security by offering a smartphone checkout option for your customers </description>
+    <notes>Minkasu features:&#xD;
+&#xD;
+Processes online payments using authorize.net &#xD;
+Supports multi-merchant Magento instances&#xD;
+Integrated with Jumio for credit card acceptance and verification &#xD;
+Phone verification done by Twilio &#xD;
+Mandatory phone verification for the customer prior to payment  &#xD;
+Order confirmation and order cancel notification to customer &#xD;
+</notes>
+    <authors><author><name>Minkasu Inc</name><user>it-admin</user><email>it-admin@minkasu.com</email></author></authors>
+    <date>2015-04-02</date>
+    <time>23:29:03</time>
+    <contents><target name="magecommunity"><dir name="Minkasu"><dir name="Wallet"><dir name="Block"><dir name="Adminhtml"><dir name="Merchant"><dir name="Create"><file name="Form.php" hash="77e288884729c197292d3799b2094d7b"/><file name="Success.php" hash="d1ed1419a27fed884c9d8d83eef9546c"/></dir><file name="Create.php" hash="108bac82be521ce9a98ffdcd716c7b4c"/><dir name="Edit"><file name="Form.php" hash="6d98746a2004442e70d6fa1e0c243723"/></dir><file name="Edit.php" hash="2c0b329a6f6df4af99da5c6407c280c8"/></dir><dir name="System"><dir name="Config"><dir name="Frontend"><file name="MinkasuGroup.php" hash="e3df5a38723927aa073f462e1648ddef"/></dir></dir></dir></dir><file name="Pay.php" hash="6545b86f80ab7a1aa43ddaaecce48112"/></dir><dir name="Helper"><dir name="Api"><file name="Merchant.php" hash="4972dbcce4b79f7e2a55f6a90aafed28"/></dir><file name="Api.php" hash="06697ab598bf34eab26e2da5959c2a59"/><file name="Data.php" hash="980d68a04425701049c06a7ab54babc4"/></dir><dir name="Model"><dir name="Api"><dir name="Adapter"><file name="Abstract.php" hash="bdfd40f16708a30f05662ce7c7c0d121"/><file name="Curl.php" hash="5c4fede05147f1ad95725e498ec169c8"/></dir><file name="Client.php" hash="8575b8b0d52635b0ec5942d2ace4dba6"/><dir name="Format"><file name="Abstract.php" hash="011af2c9cd958efffbba03e411cc1627"/><file name="Json.php" hash="f32759fe608158aede8c39d4816b8236"/></dir><dir name="Type"><file name="Abstract.php" hash="df9ed9fa6e616f233c7e01d7943ee709"/><file name="Merchant.php" hash="538f7cde93085cdf11b4687fcc9c88f9"/><file name="Transaction.php" hash="e23a56c71d75e93d4fabfcca2717c6fe"/><file name="Transaction.php~" hash="23545e15da56da3800c12a4ad6ce5139"/></dir></dir><file name="Observer.php" hash="e6492743eb60b10fdaee95536149ee2d"/><file name="Observer.php~" hash="9c3277299b811406040d738af4ce5d59"/><file name="Payment.php" hash="adf9bb580fca57262754ef6e6b035ae9"/><dir name="System"><dir name="Config"><dir name="Backend"><file name="MinkasuStatus.php" hash="3d1b41d010c4ec15311beebce2e88ae5"/></dir></dir></dir></dir><dir name="controllers"><dir name="Adminhtml"><dir name="Minkasu"><dir name="Wallet"><file name="MerchantController.php" hash="33779a2e4556c232943e197146757053"/></dir></dir></dir><file name="PaymentController.php" hash="981afd634443bc7998c76ec99c286e99"/><file name="PaymentController.php~" hash="229a669ed1748eacac248ee3bb85c157"/><file name="TransactionController.php" hash="2c2a841bb1afb753bc84c9caef448965"/><file name="TransactionController.php~" hash="c931c259fde55a209111f10453a5300b"/></dir><dir name="etc"><file name="config.xml" hash="006b92ac00c051e384a2946d2fb271f2"/><file name="system.xml" hash="e8e87d81b789d0f69bd9a8d25760f5a4"/></dir><dir name="sql"><dir name="minkasu_wallet_setup"><file name="install-0.0.0.1.php" hash="ccbed051e0d98bf2fa167ea7b13edb4f"/></dir></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Minkasu_Wallet.xml" hash="a8daca594f8108b5fd5f28b04842fa91"/></dir></target><target name="magedesign"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="layout"><file name="minkasu_wallet.xml" hash="95ca0132f2696fd91c0a67922030c8a2"/></dir><dir name="template"><dir name="minkasu"><dir name="wallet"><dir name="merchant"><dir name="create"><file name="success.phtml" hash="fec665badf6dc1032514ac0dd3b31996"/></dir><file name="popup.phtml" hash="328a29e8aa36cd7cc269d12128647658"/></dir></dir></dir></dir></dir></dir></dir><dir name="frontend"><dir name="base"><dir name="default"><dir name="layout"><file name="minkasu_wallet.xml" hash="85f4110729a56420ccb82eee5eceaa6a"/></dir><dir name="template"><dir name="minkasu"><dir name="wallet"><file name="pay.phtml" hash="7430a6dec3b70e2802fa4a0aa43cb5e5"/></dir></dir></dir></dir></dir></dir></target></contents>
+    <compatible/>
+    <dependencies><required><php><min>5.2.0</min><max>5.6.0</max></php></required></dependencies>
+</package>

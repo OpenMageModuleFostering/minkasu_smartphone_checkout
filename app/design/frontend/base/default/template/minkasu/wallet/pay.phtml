@@ -1,0 +1,192 @@
+<!--p>Checkout with Minkasu</p-->
+
+<?php
+
+$chko_session = Mage::getSingleton('checkout/session');
+
+$minkasu_amount = $chko_session->getData('minkasu_amount');
+$minkasu_bill_number = $chko_session->getData('minkasu_bill_number');
+$minkasu_txn_id = $chko_session->getData('minkasu_txn_id');
+
+
+$shipping_method = $chko_session->getData('minkasu_shipping_method');
+$shipping_estimated = $chko_session->getData('minkasu_shipping_estimated');
+$quote = $chko_session->getQuote();
+
+$shipping_estimate_not_needed = ($quote->isVirtual() || $shipping_estimated);
+
+$chkout_btn_id = "button-mk-chkout";
+
+?>
+
+<?php
+/** @var $_apiHelper Minkasu_Wallet_Helper_Api */
+$_apiHelper = Mage::helper('minkasu_wallet/api');
+$_apiGatewayUrl = $_apiHelper->getApiGatewayUrl();
+?>
+<link href="<?php echo $_apiGatewayUrl ?>/scripts/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<div class="row">
+    <div class="col-sm-12" style="text-align:right" id="minkasu_payment_div"></div>
+</div>
+
+<div class="buttons" style="height: 45px;">
+  <div class="right">
+    <input type="button" value="Checkout with Smart Phone (Minkasu)" id=<?php echo $chkout_btn_id ?> class="button" />
+  </div>
+</div>
+
+<script type="text/javascript">
+
+var resolve_jquery_conflict = false;
+
+if (typeof jQuery !== 'undefined') {
+   resolve_jquery_conflict = true;
+}
+
+var resolve_dollar_sym = false;
+
+if (typeof $ !== 'undefined') {
+   resolve_dollar_sym = true;
+}
+
+
+</script>
+
+<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="<?php echo $_apiGatewayUrl ?>/scripts/bootstrap/dist/js/bootstrap.min.js"></script>
+<script> jQuery.support.cors = true; </script>
+<script type="text/javascript" src="<?php echo $_apiGatewayUrl ?>/scripts/jquery.qrcode.min.js"></script>
+<script type="text/javascript">
+
+var minkasuJQuery = null;
+
+if (resolve_jquery_conflict) {
+  console.log("Restoring previous version of jquery");
+  minkasuJQuery = jQuery.noConflict(true);
+} else if (resolve_dollar_sym) {
+  console.log("Restoring dollar symbol");
+  minkasuJQuery = jQuery.noConflict(); // restore only the $ symbol
+} else {
+  console.log("No previous version of jquery or dollar symbol loaded");
+  minkasuJQuery = jQuery;
+}
+
+(function($) {
+
+var minkasu_session_ready_for_chkout = function() {
+
+    <?php if ($shipping_estimate_not_needed): ?>
+        return true;
+    <?php else: ?>
+        alert("Please estimate shipping and taxes and retry.");
+        return false;
+    <?php endif; ?>
+
+};
+
+var minkasu_get_txnid_fn = function(mk_data) {
+
+  <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
+     <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
+         mk_data.error("Transaction id requested when already present.");
+         return;
+     <?php else: ?>
+          $.ajax({
+               url: '<?php echo $this->getUrl('minkasu_wallet/transaction/update') ?>',
+               type: 'post',
+               data: {form_key: '<?php echo Mage::getSingleton('core/session')->getFormKey() ?>'},
+               dataType: 'json',
+               success: function(resp) {
+                   if (typeof resp.error !== 'undefined') {
+                       mk_data.error(resp.error);
+                   } else {
+                       mk_data.success({"txn_id": resp.txn_id, "payment_code": resp.payment_code, "payment_code_ttl": resp.payment_code_ttl});
+                   }
+                   return;
+               },
+               error: function(jqXHR, textStatus, errorThrown) {
+                   errorMsg = "Error updating txn_id: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+                   mk_data.error(errorMsg);
+                   return;
+               }
+          });
+       return;
+     <?php endif; ?>
+   <?php else: ?>
+        $.ajax({
+            url: '<?php echo $this->getUrl('minkasu_wallet/transaction/create') ?>',
+            type: 'post',
+            data: {form_key: '<?php echo Mage::getSingleton('core/session')->getFormKey() ?>'},
+            dataType: 'json',
+            success: function(resp) {
+                if (typeof resp.error !== 'undefined') {
+                    mk_data.error(resp.error);
+                } else {
+                    mk_data.success({"txn_id": resp.txn_id, "payment_code": resp.payment_code, "payment_code_ttl": resp.payment_code_ttl});
+                }
+                return;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                errorMsg = "Error getting new txn_id: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+                mk_data.error(errorMsg);
+                return;
+            }
+        });
+   <?php endif; ?>
+
+};
+
+
+$(document).ready(function() {
+     var minkasu_txn_id_good_for_use = false;
+        <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
+            <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
+              minkasu_txn_id_good_for_use = true;
+        <?php endif; ?>
+        <?php endif; ?>
+
+        $.getScript('<?php echo $_apiGatewayUrl ?>/scripts/minkasu-1.2.js', function() {
+
+                    var payment_args = {
+                        transaction_id: ((minkasu_txn_id_good_for_use)?'<?php echo $minkasu_txn_id ?>':null),
+                        pre_check_fn: minkasu_session_ready_for_chkout,
+                        get_txn_id_fn: ((minkasu_txn_id_good_for_use)?null: minkasu_get_txnid_fn)
+                    };
+
+                    var minkasu_options = {btn_elem_selector: '#button-mk-chkout', redirect_url: '<?php echo $this->getUrl('checkout/cart') ?>'};
+
+                    accept_payment_with_minkasu('#minkasu_payment_div', payment_args, minkasu_options, $,
+                         function (payment_details) {
+                             console.log('Obtained customer info: ' + JSON.stringify(payment_details));
+			     if (payment_details.discardable_residual_page) {
+				window.location = '<?php echo $this->getUrl('') ?>';
+				return;
+			     }
+
+                 <?php if (($minkasu_amount) && ($minkasu_bill_number)): ?>
+                             payment_details['amount'] = <?php echo $minkasu_amount ?>;
+                             payment_details['merchant_bill_num'] = <?php echo $minkasu_bill_number ?>;
+                 <?php endif; ?>
+                             $.ajax({
+                                 url: '<?php echo $this->getUrl('minkasu_wallet/payment/paid') ?>',
+                                 type: 'post',
+                                 data: $.param(payment_details),
+                                     dataType: 'json',
+                                     success: function(json) {
+                                          console.log('Payment done call complete. Data: ' + JSON.stringify(json));
+                                          window.location.href = json['redirect_url'];
+                                     },
+                                     error: function(json) {
+                                         console.log('Payment done call failed.');
+                                         alert(json.responseJSON.error);
+                                         window.location.href = '<?php echo $this->getUrl('checkout/cart') ?>';
+                                     }
+                             });
+                         }
+                    );
+        });
+
+});
+
+})(minkasuJQuery);
+</script>

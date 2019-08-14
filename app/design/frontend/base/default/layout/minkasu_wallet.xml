@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <checkout_cart_index>
+        <reference name="checkout.cart.methods">
+            <block type="minkasu_wallet/pay" name="checkout.cart.methods.minkasu_wallet.bottom">
+                <action method="setTemplate" ifconfig="payment/minkasu_wallet/active">
+                    <template>minkasu/wallet/pay.phtml</template>
+                </action>
+            </block>
+        </reference>
+    </checkout_cart_index>
+</layout>
