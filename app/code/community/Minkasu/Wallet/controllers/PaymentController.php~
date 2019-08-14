@@ -133,13 +133,12 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
             }
 
             if (Mage::getSingleton('customer/session')->isLoggedIn()) {
-                // Step 2: Set the checkout method as "login_in"
                 $quote->setCheckoutMethod('login_in')->save();
-                // Step 2.1: Customer name will be pulled from customer profile
             } else {
-                // Step 2: Set the checkout method as "guest"
+                // Step 2: Set the checkout method as "guest
                 $quote->setCheckoutMethod('guest')->save();
-                // Step 2.1: Fill customer name
+                // Step 2.1: Fill customer name (first name ?)
+                // $quote->setCustomerFirstname($customerDetails['customer_name']);
                 $customerNameParts = explode(' ', $customerDetails['customer_name']);
                 $quote->setCustomerFirstname($customerNameParts[0]);
                 $quote->setCustomerLastname(end($customerNameParts));
