@@ -55,7 +55,7 @@ class Minkasu_Wallet_Adminhtml_Minkasu_Wallet_MerchantController extends Mage_Ad
                 'business_name' => $postData['name'],
                 'email' => $postData['email'],
                 'phone' => $postData['phone'],
-		'store_url' => Mage::getBaseUrl()
+                'store_url' => Mage::getBaseUrl()
             );
             $gatewayData = array(
                 'login_id' => $postData['authNet_api_login_id'],
@@ -66,9 +66,12 @@ class Minkasu_Wallet_Adminhtml_Minkasu_Wallet_MerchantController extends Mage_Ad
             $client = Mage::getModel('minkasu_wallet/api_client');
             $result = $client->getType('merchant')->createMerchant($userData, $gatewayData);
             if (isset($result['merchant_id']) && isset($result['minkasu_token'])) {
+                /** @var $apiHelper Minkasu_Wallet_Helper_Api */
                 $apiHelper = Mage::helper('minkasu_wallet/api');
                 $apiHelper->saveApiAccountId($result['merchant_id']);
                 $apiHelper->saveApiToken($result['minkasu_token']);
+
+                $this->_updateMinkasuCcTypes($result['merchant_id'], $result['minkasu_token']);
 
                 $this->_getSession()->addSuccess(
                      $this->__('You have successfully created your Minkasu account and added it your Magento configuration.')
@@ -86,6 +89,40 @@ class Minkasu_Wallet_Adminhtml_Minkasu_Wallet_MerchantController extends Mage_Ad
         }
     }
 
+    /**
+     * @return $this
+     */
+    protected function _updateMinkasuCcTypes($merchantId, $minkasuToken)
+    {
+        /** @var $client Minkasu_Wallet_Model_Api_Client */
+        $client = Mage::getModel('minkasu_wallet/api_client');
+        /** @var $merchantHelper Minkasu_Wallet_Helper_Api_Merchant */
+        $merchantHelper = Mage::helper('minkasu_wallet/api_merchant');
+        /** @var $paygate Mage_Paygate_Model_Authorizenet */
+        $paygate = Mage::getModel('paygate/authorizenet');
+
+        $authNetCcTypes = $paygate->getConfigData('cctypes');
+        if ($authNetCcTypes) {
+            $authNetCcTypesArray = explode(',', $authNetCcTypes);
+            $minkasuCcCodes = array();
+            foreach ($authNetCcTypesArray as $authNetCcType) {
+                $minkasuCcCodes[] = $merchantHelper->getMinkasuCcCode($authNetCcType);
+            }
+            $data = array(
+                'merchant_acct_id' => $merchantId,
+                'minkasu_token' => $minkasuToken,
+                ':id' => $merchantId,
+                'cards_accepted' => $minkasuCcCodes,
+            );
+            $result = $client->getType('merchant')->updatePreference($data);
+            if (isset($result['status']) && 'success' === $result['status']) {
+                /** @var $apiHelper Minkasu_Wallet_Helper_Api */
+                $apiHelper = Mage::helper('minkasu_wallet/api');
+                $apiHelper->saveCcTypes($authNetCcTypes);
+            }
+        }
+        return $this;
+    }
     /**
      * Update a Minkasu merchant
      */

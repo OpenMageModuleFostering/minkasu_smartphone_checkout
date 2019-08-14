@@ -3,6 +3,11 @@
 class Minkasu_Wallet_Helper_Data extends Mage_Payment_Helper_Data
 {
     /**
+     * URL to Magento help resource
+     */
+    const URL_HELP = 'https://www.minkasu.com/magento/';
+
+    /**
      * @param mixed $amount
      *
      * @return int
@@ -56,5 +61,13 @@ class Minkasu_Wallet_Helper_Data extends Mage_Payment_Helper_Data
         $session->unsetData('minkasu_est_zip');
         $session->unsetData('minkasu_est_state');
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHelpUrl()
+    {
+        return self::URL_HELP;
     }
 }

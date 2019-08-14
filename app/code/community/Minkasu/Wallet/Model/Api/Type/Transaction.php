@@ -115,7 +115,7 @@ class Minkasu_Wallet_Model_Api_Type_Transaction extends Minkasu_Wallet_Model_Api
      *
      * @return array
      */
-    public function authorizeTransaction($transactionId, $paymentToken, $amount)
+    public function authorizeTransaction($transactionId, $paymentToken, $amount, $orderId)
     {
 	/** @var $walletHelper Minkasu_Wallet_Helper_Data */
         $walletHelper = Mage::helper('minkasu_wallet');
@@ -125,6 +125,7 @@ class Minkasu_Wallet_Model_Api_Type_Transaction extends Minkasu_Wallet_Model_Api
         $params = array(
             'operation' => self::OPERATION_AUTHORIZE,
 	    'authorize_amount' => $walletHelper->convertDollarsToCents($amount),
+	    'merchant_bill_number' => $orderId,  
             'merchant_acct_id' => $apiHelper->getApiAccountId(),
             'minkasu_token' => $apiHelper->getApiToken(),
             'payment_token' => $paymentToken,

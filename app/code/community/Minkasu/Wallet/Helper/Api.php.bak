@@ -11,7 +11,7 @@ class Minkasu_Wallet_Helper_Api extends Mage_Core_Helper_Data
     const XML_PATH_API_MODE                = 'payment/minkasu_wallet/mode';
     const XML_PATH_API_ESTIMATE_ENABLED    = 'payment/minkasu_wallet/estimate_enabled';
     const XML_PATH_API_CC_TYPES            = 'payment/minkasu_wallet/cctypes';
-    const XML_PATH_API_PAYMENTACTION       = 'payment/minkasu_wallet/payment_action';
+    const XML_PATH_API_PAYMENTACTION       = 'payment/minkasu_wallet/paymentaction';
 
     /**
      * Minkasu API log filename
@@ -70,14 +70,6 @@ class Minkasu_Wallet_Helper_Api extends Mage_Core_Helper_Data
     public function getApiTokens()
     {
         return Mage::getStoreConfig(self::XML_PATH_API_TOKEN);
-    }
-
-    /**
-     * @return string
-     */
-    public function getPaymentaction()
-    {
-        return Mage::getStoreConfig(self::XML_PATH_API_PAYMENTACTION);
     }
 
     /**

@@ -48,16 +48,7 @@ class Minkasu_Wallet_Model_Payment extends Mage_Payment_Model_Method_Abstract
 	    $orderId
         );
 
-        $txnId = $checkoutSession->getData('minkasu_txn_id');
-
-        /** @var $_apiHelper Minkasu_Wallet_Helper_Api */
-        $apiHelper = Mage::helper('minkasu_wallet/api');
-        $paymentaction = $apiHelper->getPaymentaction();
-        if ($paymentaction == 'authorize_capture') {
-            $txnId = $txnId . '-capture';
-        }
-
-        $payment->setTransactionId($txnId);
+        $payment->setTransactionId($checkoutSession->getData('minkasu_txn_id'));
         $payment->setIsTransactionClosed(0);
         $payment->setTransactionAdditionalInfo('quote number', $checkoutSession->getData('minkasu_bill_number'));
 
@@ -73,18 +64,10 @@ class Minkasu_Wallet_Model_Payment extends Mage_Payment_Model_Method_Abstract
      */
     public function capture(Varien_Object $payment, $amount)
     {
-        /** @var $_apiHelper Minkasu_Wallet_Helper_Api */
-        $apiHelper = Mage::helper('minkasu_wallet/api');
-        $paymentaction = $apiHelper->getPaymentaction();
-
-        if ($paymentaction == 'authorize_capture') {
-            $this->authorize($payment, $amount);
-        } else {
-            /** @var $client Minkasu_Wallet_Model_Api_Client */
-            $client = Mage::getModel('minkasu_wallet/api_client');
-            $client->getType('transaction')->captureTransaction($payment->getData('parent_transaction_id'), $amount);
-            $payment->setIsTransactionClosed(0);
-        }
+        /** @var $client Minkasu_Wallet_Model_Api_Client */
+        $client = Mage::getModel('minkasu_wallet/api_client');
+        $client->getType('transaction')->captureTransaction($payment->getData('parent_transaction_id'), $amount);
+        $payment->setIsTransactionClosed(0);
 
         return $this;
     }

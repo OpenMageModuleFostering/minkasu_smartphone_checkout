@@ -194,7 +194,7 @@ var showShippingOptions = function() {
     }
 
     so_el.append("<select name=\"mk_shipping_option\" " +
-        		  "style=\"background-color: white; border-color: #999999; box-sizing: content-box; color: #333333; " +
+                          "style=\"background-color: white; border-color: #999999; box-sizing: border-box; color: #333333; " +
             		  "font-family: Open Sans; font-size: 13px; height: auto; margin: 0px; padding: 4px; width: 100%\">" + shipping_option_elems + "</select>");
     so_el.find('[name="mk_shipping_option"]').change(function() {
         var current_shipping_option = $(this).val();
@@ -237,16 +237,41 @@ var getShippingRates = function(cb_fn) {
 
 };
 
+function zip_code_is_valid(zip) {
+
+	var trim_zip = zip.trim();
+
+	if (trim_zip.length != 5) { 
+		return false;
+	}
+	
+	for (var i = 0; i < 5; i++) {
+		var next_char_code = trim_zip.charCodeAt(i);
+		if ((next_char_code < 48) || (next_char_code > 57)) {
+			return false;
+		}  
+	}
+
+	return true;
+
+}
+
 
 var updateCartPriceEstimateWithZip = function(zip) {
 
     jQuery.cors = true;
     var req_data = { };
 
+    if (!(zip_code_is_valid(zip))) {
+	errorMsg = "Please enter a valid zip code.";
+	window.alert(errorMsg);
+	return;
+    }	
+
     _getStateAndCityFromZip(zip, function(error, address_info) {
 
     if (error) {
-       errorMsg = "Error looking up zip code: " + error;
+       errorMsg = "Please enter a valid zip code.";
        window.alert(errorMsg);
        return;	    
    }
@@ -284,9 +309,11 @@ var updateCartPriceEstimateWithDiscount = function(discount_code) {
 
     jQuery.cors = true;
     var req_data = { };
+    var remove_code = false;
 
     if (!discount_code || discount_code.length == 0) {
         req_data["remove"] = "1";
+	remove_code = true;
     } else {
         req_data["coupon_code"] = discount_code;
     }
@@ -294,14 +321,25 @@ var updateCartPriceEstimateWithDiscount = function(discount_code) {
     $("#mk_shipping_est_table").find("#inprogress_indicator").show();
 
     $.ajax({
-        url: '<?php echo $this->getUrl("checkout/cart/couponPost/") ?>',
+        url: '<?php echo $this->getUrl("minkasu_wallet/payment/applyCouponCode") ?>',
         type:'post',
         data: $.param(req_data),
         success: function(resp) {
-            window.location.reload();
+	    console.log("Resp recevied for coupon code - " + JSON.stringify(resp));
+	    if (resp.status == "success") { 
+	    	// alert("Coupon code applied.");
+            	window.location.reload();
+	    } else {
+		var alert_msg = "Please enter a valid coupon code.";
+		if (remove_code) {
+			alert_msg = "Unable to remove coupon. Unknown error";
+		}
+		window.alert(alert_msg);
+		$("#mk_shipping_est_table").find("#inprogress_indicator").hide();
+	    }	
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            errorMsg = "Error apply discount code: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
+            errorMsg = "Error applying discount code: " + textStatus + "; \n" + errorThrown + "\n" + JSON.stringify(jqXHR);
             window.alert(errorMsg);
             $("#mk_shipping_est_table").find("#inprogress_indicator").hide();
             return;
@@ -344,40 +382,24 @@ var minkasu_session_ready_for_chkout = function() {
     <?php else: ?>
         if (hide_default_estimate_block && $(".shipping").is(":hidden")) {
             $(".shipping").show("slow", function() {
-                alert("Please estimate shipping and taxes and retry.");
+                alert("Please enter your zip code to estimate your shipping and taxes and retry.");
             });
         } else {
-            alert("Please estimate shipping and taxes and retry.");
+            alert("Please enter your zip code to estimate your shipping and taxes and retry.");
         }
         return false;
     <?php endif; ?>
 
 };
 
-
+var txn_created = false;
+var created_txn_id = null;
 
 var minkasu_get_txnid_fn = function(mk_data) {
 
-  <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
-    <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
-        <?php
-            $data = NULL;
-            $shippingAddress = $quote->getShippingAddress();
-            if ($shippingAddress != NULL) {
-                $expectedAddress = ($shippingAddress->exportCustomerAddress());
-                if ($expectedAddress != NULL) {
-                    $data = $expectedAddress->getData();
-                }
-            }
-            if (($data != NULL) &&
-                ($minkasu_exp_zip && ($minkasu_exp_zip == $data["postcode"])) &&
-                ($minkasu_exp_state && ($minkasu_exp_state == $data["region"]))): ?>
-                 console.log("Transaction id requested when already present.");
-                 mk_data.error("Transaction id requested when already present.");
-                 return;
-        <?php endif; ?>
-    <?php endif; ?>
-          console.log("Updating transaction...");
+  var update_txn_fn = function() {
+
+         console.log("Updating transaction...");
           $.ajax({
                url: '<?php echo $this->getUrl('minkasu_wallet/transaction/update') ?>',
                type: 'post',
@@ -398,7 +420,11 @@ var minkasu_get_txnid_fn = function(mk_data) {
                }
           });
        return;
-   <?php else: ?>
+
+  };
+
+  var create_txn_fn = function() {
+
         console.log("Creating transaction...");
         $.ajax({
             url: '<?php echo $this->getUrl('minkasu_wallet/transaction/create') ?>',
@@ -410,6 +436,8 @@ var minkasu_get_txnid_fn = function(mk_data) {
                     mk_data.error(resp.error);
                 } else {
                     mk_data.success({"txn_id": resp.txn_id, "payment_code": resp.payment_code, "payment_code_ttl": resp.payment_code_ttl});
+		    txn_created = true;
+		    created_txn_id = resp.txn_id;
                 }
                 return;
             },
@@ -419,6 +447,39 @@ var minkasu_get_txnid_fn = function(mk_data) {
                 return;
             }
         });
+
+  };	
+
+  <?php if ($minkasu_txn_id && $minkasu_bill_number == $quote->getId()): ?>
+    <?php if ($minkasu_amount == $quote->getGrandTotal()): ?>
+        <?php
+            $data = NULL;
+            $shippingAddress = $quote->getShippingAddress();
+            if ($shippingAddress != NULL) {
+                $expectedAddress = ($shippingAddress->exportCustomerAddress());
+                if ($expectedAddress != NULL) {
+                    $data = $expectedAddress->getData();
+                }
+            }
+            if (($data != NULL) &&
+                ($minkasu_exp_zip && ($minkasu_exp_zip == $data["postcode"])) &&
+                ($minkasu_exp_state && ($minkasu_exp_state == $data["region"]))): ?>
+                 console.log("Transaction id requested when already present.");
+                 mk_data.error("Transaction id requested when already present.");
+                 return;
+        <?php endif; ?>
+    <?php endif; ?>
+
+    update_txn_fn();
+
+   <?php else: ?>
+
+    if (txn_created) {
+      update_txn_fn();
+    } else {
+      create_txn_fn();
+    }
+
    <?php endif; ?>
 
 };

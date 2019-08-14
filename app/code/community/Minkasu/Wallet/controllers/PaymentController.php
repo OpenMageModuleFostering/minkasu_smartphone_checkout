@@ -26,6 +26,40 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
    }
 
 
+   public function applyCouponCodeAction()
+   {
+	$coupon = $this->getRequest()->getParam('coupon_code');
+	$remove = $this->getRequest()->getParam('remove');	
+
+	if ($remove == 1) {
+		$coupon = '';
+	}
+
+	try {
+		Mage::getSingleton('checkout/cart')
+        	->getQuote()
+        	->setCouponCode($coupon)
+        	->collectTotals()
+        	->save();
+		$applied_coupon = Mage::getSingleton('checkout/cart')
+                ->getQuote()
+                ->getCouponCode();
+		if ($coupon == $applied_coupon) { 
+			$status = "success";
+		} else {
+			$status = "failed";
+		}
+	}
+	catch (Exception $e) {
+		$status = "failed";
+	}
+
+	$result = ["status" => $status];
+	$this->getResponse()->setHeader('Content-type', 'application/json');
+        $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
+
+   }
+
     /**
      * Make a payment
      */

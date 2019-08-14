@@ -5,17 +5,18 @@
             <groups>
                 <minkasu_wallet translate="label comment" module="minkasu_wallet">
                     <label>Minkasu. Smartphone Checkout</label>
-                    <comment><![CDATA[<a href="#" onclick="openCreateMerchantPopup(); return false;">%s</a>]]></comment>
+                    <comment><![CDATA[<a id="create_edit_mechant" href="#" style="margin:0" onclick="%s; return false;">%s</a> / <a style="margin:0" href="%s" target="_blank">%s</a>]]></comment>
                     <frontend_model>minkasu_wallet/adminhtml_system_config_frontend_minkasuGroup</frontend_model>
                     <sort_order>670</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <fields>
-			<mode>
+                        <mode>
                             <label>Test Mode</label>
                             <frontend_type>select</frontend_type>
                             <frontend_model>minkasu_wallet/adminhtml_system_config_frontend_minkasuMode</frontend_model>
+                            <backend_model>minkasu_wallet/system_config_backend_mode</backend_model>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <comment><![CDATA[Run against Minkasu LIVE/SandBox Environment.]]></comment>
                             <sort_order>10</sort_order>
@@ -23,15 +24,6 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </mode>
-                        <!--mode>
-                            <label>Mode</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>minkasu_wallet/source_api_mode</source_model>
-                            <sort_order>10</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </mode-->
                         <separator>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
                             <sort_order>20</sort_order>
@@ -73,7 +65,7 @@
                             <label>Account Id</label>
                             <comment><![CDATA[This data is stored encrypted in the database.]]></comment>
                             <frontend_type>text</frontend_type>
-                            <backend_model>adminhtml/system_config_backend_encrypted</backend_model>
+                            <backend_model>minkasu_wallet/system_config_backend_double</backend_model>
                             <sort_order>60</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -83,7 +75,7 @@
                             <label>Token</label>
                             <comment><![CDATA[This data is stored encrypted in the database.]]></comment>
                             <frontend_type>text</frontend_type>
-                            <backend_model>adminhtml/system_config_backend_encrypted</backend_model>
+                            <backend_model>minkasu_wallet/system_config_backend_double</backend_model>
                             <sort_order>70</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -107,6 +99,38 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </estimate_enabled>
+                        <address_po_box_enabled translate="label">
+                            <label><![CDATA[Enable Address with P.O.Box]]></label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <backend_model>minkasu_wallet/system_config_backend_addressPoBoxEnabled</backend_model>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </address_po_box_enabled>
+                        <payment_action translate="label">
+                           <label><![CDATA[Payment Action]]></label>
+                           <frontend_type>select</frontend_type>
+                           <source_model>minkasu_wallet/source_paymentaction</source_model>
+                           <!--frontend_model>minkasu_wallet/adminhtml_system_config_frontend_paymentaction</frontend_model-->
+                           <backend_model>minkasu_wallet/system_config_backend_paymentaction</backend_model>
+                           <sort_order>110</sort_order>
+                           <show_in_default>1</show_in_default>
+                           <show_in_website>1</show_in_website>
+                           <show_in_store>0</show_in_store>
+                       </payment_action>
+                        <cctypes translate="label">
+                            <label>Credit Card Types</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <frontend_model>minkasu_wallet/adminhtml_system_config_frontend_cctype</frontend_model>
+                            <backend_model>minkasu_wallet/system_config_backend_cctype</backend_model>
+                            <source_model>minkasu_wallet/source_cctype</source_model>
+                            <sort_order>120</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </cctypes>
                     </fields>
                 </minkasu_wallet>
             </groups>

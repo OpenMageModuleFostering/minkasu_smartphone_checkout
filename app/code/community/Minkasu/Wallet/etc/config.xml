@@ -16,6 +16,27 @@
                 <class>Minkasu_Wallet_Helper</class>
             </minkasu_wallet>
         </helpers>
+        <payment>
+            <cc>
+                <types>
+                    <DN>
+                        <code>DN</code>
+                        <name>Dinners</name>
+                        <order>60</order>
+                    </DN>
+                    <JSB>
+                        <code>JCB</code>
+                        <name>JCB</name>
+                        <order>70</order>
+                    </JSB>
+                    <CUP>
+                        <code>CUP</code>
+                        <name>China Union Pay</name>
+                        <order>80</order>
+                    </CUP>
+                </types>
+            </cc>
+        </payment>
         <resources>
             <minkasu_wallet_setup>
                 <setup>
@@ -104,6 +125,7 @@
                 <payment_action>authorize</payment_action>
                 <token backend_model="adminhtml/system_config_backend_encrypted"/>
                 <estimate_enabled>1</estimate_enabled>
+                <address_po_box_enabled>0</address_po_box_enabled>
             </minkasu_wallet>
         </payment>
     </default>

@@ -8,6 +8,32 @@ class Minkasu_Wallet_Helper_Api_Merchant extends Mage_Core_Helper_Data
     protected $_isMerchantActive;
 
     /**
+     * @var array
+     */
+    protected $_magentoToMinkasuCcMap = array(
+        'VI' => 'visa',
+        'MC' => 'mastercard',
+        'AE' => 'amex',
+        'DN' => 'dinners',
+        'DI' => 'discover',
+        'JCB' => 'jcb',
+        'CUP' => 'china_union_pay',
+    );
+
+    /**
+     * @param string $magentoCode
+     * @return string
+     * @throws Mage_Core_Exception
+     */
+    public function getMinkasuCcCode($magentoCode)
+    {
+        if (!isset($this->_magentoToMinkasuCcMap[$magentoCode])) {
+            Mage::throwException($this->__("CC with code %s doesn't exist."));
+        }
+        return $this->_magentoToMinkasuCcMap[$magentoCode];
+    }
+
+    /**
      * @return bool
      */
     public function isMerchantActive()

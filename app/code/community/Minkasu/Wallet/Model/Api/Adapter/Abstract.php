@@ -87,7 +87,7 @@ abstract class Minkasu_Wallet_Model_Api_Adapter_Abstract
                 null,
                 $apiHelper->getApiLogFilename()
             );
-            Mage::throwException($helper->__('Minkasu API error has been occurred. Error: %s.', $error));
+            Mage::throwException($helper->__('Minkasu API Error: %s.', $error));
         }
         return $decodedResponse;
     }
@@ -129,7 +129,7 @@ abstract class Minkasu_Wallet_Model_Api_Adapter_Abstract
                 null,
                 $apiHelper->getApiLogFilename()
             );
-            Mage::throwException($helper->__('Minkasu API error has been occurred. Error: %s.', $error));
+            Mage::throwException($helper->__('Minkasu API Error: %s.', $error));
         }
         return $decodedResponse;
     }

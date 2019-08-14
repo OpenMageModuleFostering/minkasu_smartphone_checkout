@@ -1,11 +1,11 @@
 <?php
     /** @var $apiHelper Minkasu_Wallet_Helper_Api */
     $apiHelper = Mage::helper('minkasu_wallet/api');
-    $isMerchantExist = $apiHelper->getApiAccountId() && $apiHelper->getApiToken();
+    $doesMerchantExist = $apiHelper->getApiAccountId() && $apiHelper->getApiToken();
 ?>
 <script type="text/javascript">
     function openCreateMerchantPopup() {
-        var url = '<?php echo $this->getUrl('adminhtml/minkasu_wallet_merchant/' . ($isMerchantExist ? 'edit' : 'create')) ?>';
+        var url = '<?php echo $this->getUrl('adminhtml/minkasu_wallet_merchant/create') ?>';
         var loadingMask = $('loading-mask');
 
         if ($('browser_window') && typeof(Windows) != 'undefined') {
@@ -19,7 +19,39 @@
             className:'magento',
             windowClassName:'popup-window',
             width:600,
-            height:<?php echo ($isMerchantExist ? 200 : 335) ?>,
+            height:335,
+            zIndex:1000,
+            recenterAuto:true,
+            hideEffect:Element.hide,
+            showEffect:function() {
+                loadingMask.style.zIndex = Windows.maxZIndex + 2;
+                loadingMask.show();
+            },
+            id:'browser_window',
+            url:url,
+            onload:function() {
+                loadingMask.hide();
+                Element.show('browser_window');
+            }
+        });
+    }
+
+    function openEditMerchantPopup() {
+        var url = '<?php echo $this->getUrl('adminhtml/minkasu_wallet_merchant/edit') ?>';
+        var loadingMask = $('loading-mask');
+
+        if ($('browser_window') && typeof(Windows) != 'undefined') {
+            Windows.focus('browser_window');
+            return;
+        }
+        var dialogWindow = Dialog.info(null, {
+            closable:true,
+            resizable:false,
+            draggable:false,
+            className:'magento',
+            windowClassName:'popup-window',
+            width:600,
+            height:200,
             zIndex:1000,
             recenterAuto:true,
             hideEffect:Element.hide,
