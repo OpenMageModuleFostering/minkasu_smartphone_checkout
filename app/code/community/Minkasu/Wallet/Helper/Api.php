@@ -12,6 +12,7 @@ class Minkasu_Wallet_Helper_Api extends Mage_Core_Helper_Data
     const XML_PATH_API_ESTIMATE_ENABLED    = 'payment/minkasu_wallet/estimate_enabled';
     const XML_PATH_API_CC_TYPES            = 'payment/minkasu_wallet/cctypes';
     const XML_PATH_API_PAYMENTACTION       = 'payment/minkasu_wallet/payment_action';
+    const XML_PATH_API_PROMO_CODES	   = 'payment/minkasu_wallet/promo_codes';
 
     /**
      * Minkasu API log filename

@@ -12,32 +12,33 @@ $show_minkasu_estimate_box = $_apiEstimateEnabled;
 <?php if ($show_minkasu_estimate_box) : ?>
 
 <div id="mk_shipping_est_div" style="display: block; overflow: auto"> 
-    <table style="border: 0px; margin:0px"><tr><td style="border: 0px; padding: 0px; width:100%"></td> 
+    <table style="border: 0px; margin:0px"><tr>
+	<!--td style="border: 0px; padding: 0px; width:100%"></td --> 
         <td style="border: 0px; padding: 0px; padding-bottom: 30px; padding-top: 20px;"> 
 
     <table id="mk_shipping_est_table" style="background-color: #E7F6F0; border: 1px solid #19D383; border-collapse: separate; border-spacing: 0px; border-radius: 3px; margin: 0px; padding-bottom: 10px; padding-left: 15px; padding-right: 15px; padding-top: 15px; width: 330px"> 
 
     <tr> 
 	<td style="border: 0px; padding-bottom: 5px; padding-left: 0px; padding-right: 5px; padding-top:0px; text-align: right; vertical-align: middle"> 
-        <span style="color: #333333; font-family: Open Sans; font-size: 12px;">Shipping & Taxes</span> 
+        <span style="color: #333333; font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 12px;">Shipping & Taxes</span> 
     </td> 
 	<td style="border: 0px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; padding-top:0px; vertical-align: middle"> 
         <input type="text" id="ship_zip" style="background-color: white; border-color: #999999; box-sizing: content-box; color: #999999; font-family: Open Sans; font-size: 13px; font-style: italic; height: 16px; margin: 0px; padding: 4px; width: 85px" value="Zip code"/>
     </td> 
     <td style="border: 0px; padding-bottom: 5px; padding-left: 5px; padding-right: 0px; padding-top:0px; vertical-align: middle"> 
-        <input type="button" id="mk_cart_est_btn" value="Estimate" style="background-color: #F2F2F2; border-color: #999999; border-radius: 2px; border-width: 1px; color: #333333; font-family: Open Sans; font-size: 12px; font-weight: 600; height: 24px; margin: 0px; padding: 4px; width: 80px">    
+        <input type="button" id="mk_cart_est_btn" value="Estimate" style="background-color: #F2F2F2; border-color: #999999; border-radius: 2px; border-width: 1px; color: #333333; font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 600; height: 24px; margin: 0px; padding: 4px; width: 80px">    
     </td> 
     </tr> 
 
     <tr id="discount_code_row" style="display:none"> 
 	<td style="border: 0px; padding-bottom: 5px; padding-left: 0px; padding-right: 5px; padding-top:5px; text-align: right; vertical-align: middle">
-        <span id="discount_txt" style="color: #333333; font-family: Open Sans; font-size: 12px;">Apply discount</span> 
+        <span id="discount_txt" style="color: #333333; font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 12px;">Discount</span> 
     	</td> 
 	<td style="border: 0px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; padding-top:5px; vertical-align: middle"> 
         <input type="text" id="discount_code" style="background-color: white; border-color: #999999; box-sizing: content-box; color: #999999; font-family: Open Sans; font-size: 13px; font-style: italic; height: 16px; margin: 0px; padding: 4px; width: 85px" value="Coupon"/>
     </td> 
     <td style="border: 0px; padding-bottom: 5px; padding-left: 5px; padding-right: 0px; padding-top:5px; vertical-align: middle">
-        <input type="button" id="mk_cart_apply_btn" value="Apply" style="background-color: #F2F2F2; border-color: #999999; border-radius: 2px; border-width: 1px; color: #333333; font-family: Open Sans; font-size: 12px; font-weight: 600; height: 24px; margin: 0px; padding: 4px; width: 80px">
+        <input type="button" id="mk_cart_apply_btn" value="Apply" style="background-color: #F2F2F2; border-color: #999999; border-radius: 2px; border-width: 1px; color: #333333; font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 600; height: 24px; margin: 0px; padding: 4px; width: 80px">
     </td> 
     </tr> 
 
@@ -49,7 +50,7 @@ $show_minkasu_estimate_box = $_apiEstimateEnabled;
 
     <tr id="shipping_options_row" style="display:none"> 
 	<td style="border: 0px; padding-bottom: 5px; padding-left: 0px; padding-right: 5px; padding-top:5px; text-align: right;"> 
-        <span style="color: #333333; font-family: Open Sans; font-size: 12px;">Shipping</span> 
+        <span style="color: #333333; font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 12px;">Shipping</span> 
     	</td> 
     	<td id="shipping_options_cell" colspan="2" style="border: 0px; padding-bottom: 5px; padding-left: 5px; padding-right: 0px; padding-top:5px"> 
     	</td> 

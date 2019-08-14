@@ -195,7 +195,7 @@ var showShippingOptions = function() {
 
     so_el.append("<select name=\"mk_shipping_option\" " +
                           "style=\"background-color: white; border-color: #999999; box-sizing: border-box; color: #333333; " +
-            		  "font-family: Open Sans; font-size: 13px; height: auto; margin: 0px; padding: 4px; width: 100%\">" + shipping_option_elems + "</select>");
+            		  "font-family: Open Sans, Arial, Helvetica, sans-serif; font-size: 13px; height: auto; margin: 0px; padding: 4px; width: 100%\">" + shipping_option_elems + "</select>");
     so_el.find('[name="mk_shipping_option"]').change(function() {
         var current_shipping_option = $(this).val();
     	updateCartPriceEstimateWithShippingOption(shipping_option_rates[current_shipping_option].code);
@@ -254,7 +254,23 @@ function zip_code_is_valid(zip) {
 
 	return true;
 
-}
+};
+
+
+var setPaymentMethodToMinkasu = function(cb_fn) {
+
+	$.ajax({
+        	url: '<?php echo $this->getUrl("minkasu_wallet/payment/setPaymentMethodToMinkasu") ?>',
+        	type: 'post',
+        	success: function(resp) {
+			cb_fn({status: "success"});
+        	},
+        	error: function(jqXHR, textStatus, errorThrown) {
+			cb_fn({status: "failed", error: errorThrown});
+        	}
+        });
+
+};
 
 
 var updateCartPriceEstimateWithZip = function(zip) {
@@ -302,7 +318,9 @@ var updateCartPriceEstimateWithZip = function(zip) {
 		   return;
             }
 	 });
+
     });
+
 };
 
 var updateCartPriceEstimateWithDiscount = function(discount_code) {
@@ -554,7 +572,6 @@ $(document).ready(function() {
         });
 
         <?php if ($coupon_code) : ?>
-            $("#discount_txt").text("Remove discount");
             $("#discount_code").prop("disabled", true);
             $("#mk_cart_apply_btn").prop("value", "Remove");
             $("#mk_shipping_est_table").find("#discount_code").val('<?php echo $coupon_code; ?>');

@@ -25,6 +25,48 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
 
    }
 
+   public function setPaymentMethodToMinkasuAction()
+   {
+	
+	$checkoutSession = Mage::getSingleton('checkout/session');
+        $quote = $checkoutSession->getQuote();
+	/*
+	if($quote->isVirtual()) {
+        	$quote->getBillingAddress()->setPaymentMethod('minkasu_wallet');
+        } else {
+        	$quote->getShippingAddress()->setPaymentMethod('minkasu_wallet');
+        }
+
+	// shipping totals may be affected by payment method
+       	if (!$quote->isVirtual() && $quote->getShippingAddress()) {
+        	$quote->getShippingAddress()->setCollectShippingRates(true);
+       	}
+
+	$versionArr = Mage::getVersionInfo();
+       	$versionStr = $versionArr['major'] . "." . $versionArr['minor'];
+        Mage::log("Minkasu - Magento Version: " . $versionStr);
+        $versionFlt = floatval($versionStr);
+
+       	if ($versionFlt >= 1.8) {
+                Mage::log("Minkasu - Setting Payment Model Method Checks");
+                $data['checks'] = Mage_Payment_Model_Method_Abstract::CHECK_USE_CHECKOUT
+                    | Mage_Payment_Model_Method_Abstract::CHECK_USE_FOR_COUNTRY
+                    | Mage_Payment_Model_Method_Abstract::CHECK_USE_FOR_CURRENCY
+                    | Mage_Payment_Model_Method_Abstract::CHECK_ORDER_TOTAL_MIN_MAX
+                    | Mage_Payment_Model_Method_Abstract::CHECK_ZERO_TOTAL;
+        }
+	*/
+
+	$payment = $quote->getPayment();
+       	$payment->importData(array('method' => 'minkasu_wallet'));
+	$quote->save();
+	
+	$result = ["status" => "success"];
+        $this->getResponse()->setHeader('Content-type', 'application/json');
+        $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
+	
+   }
+
 
    public function applyCouponCodeAction()
    {
@@ -95,8 +137,9 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
             // Step 2.1:Fill customer name (first name ?)
             $quote->setCustomerFirstname($customerDetails['customer_name']);
             // Step 3: Fill the address and save it as billing and shipping address
-            $addressInfo = $this->_prepareCustomerAddressInfo($customerDetails);
-            $this->_saveBillingAndShippingAddress($quote, $addressInfo);
+	    $billingAddressInfo = $this->_prepareBillingAddressInfo($customerDetails);
+	    $shippingAddressInfo = $this->_prepareCustomerAddressInfo($customerDetails);
+            $this->_saveBillingAndShippingAddress($quote, $billingAddressInfo, $shippingAddressInfo);
 
             // Step 4: Shipping method should already be set by now.
             $checkoutSession->setStepData('shipping_method', 'complete', true);
@@ -184,24 +227,34 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
      *
      * @return array
      */
-    protected function _extractCustomerDetails(array $response)
-    {
+     protected function _extractCustomerDetails(array $response)
+     {
         $result = array();
 
-        $result['customer_details_valid'] = false;
+	$result['customer_details_valid'] = false;
 
-        if (!isset($response['customer_address']) || (!isset($response['customer_name']))) {
+        if (!isset($response['customer_address'])
+           || (!isset($response['customer_name']))
+           || (!isset($response['billing_address']))) {
             return $result;
         }
 
         $result['customer_name'] = $response['customer_name'];
-        $result['street_1'] = $response['customer_address']['address_line_1'];
+	$result['street_1'] = $response['customer_address']['address_line_1'];
         $result['street_2'] = $response['customer_address']['address_line_2'];
         $result['city'] = $response['customer_address']['city'];
-        $result['state'] = $response['customer_address']['state'];
+	$result['state'] = $response['customer_address']['state'];
         $result['zip'] = $response['customer_address']['zip'];
         $result['phone'] = $response['phone'];
-        $result['email'] = $response['email'];
+	$result['email'] = $response['email'];
+
+        $result['billing_address'] = array();
+        $result['billing_address']['street_1'] = $response['billing_address']['address_line_1'];
+        $result['billing_address']['street_2'] = $response['billing_address']['address_line_2'];
+        $result['billing_address']['city'] = $response['billing_address']['city'];
+        $result['billing_address']['state'] = $response['billing_address']['state'];
+        $result['billing_address']['zip'] = $response['billing_address']['zip'];
+
         $result['customer_details_valid'] = true;
 
         return $result;
@@ -232,7 +285,37 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
         $addressInfo['telephone'] = $customerDetails['phone'];
         $addressInfo['use_for_shipping'] = 1;
 
+        // Mage::log('Shipping address info - ' . print_r($addressInfo, true));
+
         return $addressInfo;
+    }
+
+    protected function _prepareBillingAddressInfo(array $customerDetails)
+    {
+
+    /** @var $regionModel Mage_Directory_Model_Region */
+        $regionModel = Mage::getModel('directory/region');
+        $regionModel->loadByCode($customerDetails['billing_address']['state'], 'US');
+
+        $customerNameParts = explode(' ', $customerDetails['customer_name']);
+
+	$addressInfo = array();
+        $addressInfo['firstname'] = $customerNameParts[0];
+        $addressInfo['lastname'] = end($customerNameParts);
+	$addressInfo['email'] =  $customerDetails['email'];
+	$addressInfo['street']  = array(0 => $customerDetails['billing_address']['street_1'], 1 => $customerDetails['billing_address']['street_2']);
+	$addressInfo['city'] = $customerDetails['billing_address']['city'];
+	$addressInfo['region_id'] = $regionModel->getId();
+        $addressInfo['postcode'] = $customerDetails['billing_address']['zip'];
+	$addressInfo['country_id'] = 'US';
+        $addressInfo['telephone'] = $customerDetails['phone'];
+        $addressInfo['use_for_shipping'] = 0;
+
+        // Mage::log('Billing address info - ' . print_r($addressInfo, true));
+
+        return $addressInfo;
+
+
     }
 
     /**
@@ -241,7 +324,7 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
      *
      * @return $this
      */
-    protected function _saveBillingAndShippingAddress($quote, $data)
+    protected function _saveBillingAndShippingAddress($quote, $billing_data, $shipping_data)
     {
         $address = $quote->getBillingAddress();
         /** @var $addressForm Mage_Customer_Model_Form */
@@ -250,7 +333,7 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
         $addressForm->setEntityType('customer_address');
         $addressForm->setEntity($address);
         // emulate request object
-        $addressData = $addressForm->extractData($addressForm->prepareRequest($data));
+        $addressData = $addressForm->extractData($addressForm->prepareRequest($billing_data));
         $addressErrors  = $addressForm->validateData($addressData);
         if (true !== $addressErrors) {
             Mage::log("Minkasu - address validation failed");
@@ -258,12 +341,12 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
         $addressForm->compactData($addressData);
         //unset billing address attributes which were not shown in form
         foreach ($addressForm->getAttributes() as $attribute) {
-            if (!isset($data[$attribute->getAttributeCode()])) {
+            if (!isset($billing_data[$attribute->getAttributeCode()])) {
                 $address->setData($attribute->getAttributeCode(), NULL);
             }
         }
         $address->setCustomerAddressId(null);
-        $address->setEmail($data['email']);
+        $address->setEmail($billing_data['email']);
         $address->implodeStreetAddress();
 
         $billing = clone $address;
@@ -278,14 +361,14 @@ class Minkasu_Wallet_PaymentController extends Mage_Core_Controller_Front_Action
         // don't reset original shipping data, if it was not changed by customer
         foreach ($shipping->getData() as $shippingKey => $shippingValue) {
             if (!is_null($shippingValue) && !is_null($billing->getData($shippingKey))
-                && !isset($data[$shippingKey]) && !in_array($shippingKey, $requiredBillingAttributes)
+                && !isset($billing_data[$shippingKey]) && !in_array($shippingKey, $requiredBillingAttributes)
             ) {
                 $billing->unsetData($shippingKey);
             }
         }
 
-        $shipping->addData($billing->getData());
-        $shipping->setSameAsBilling(1);
+	$shipping->addData($shipping_data);
+	$shipping->implodeStreetAddress();
         $shipping->setSaveInAddressBook(0);
         $shipping->setShippingMethod($shippingMethod);
         $shipping->setCollectShippingRates(true);

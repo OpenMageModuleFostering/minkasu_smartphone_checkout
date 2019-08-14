@@ -63,6 +63,26 @@
                     </minkasu_wallet_save_order_quote_to_session>
                 </observers>
             </checkout_cart_save_after>
+
+	    <checkout_cart_save_before>
+		<observers>
+                    <minkasu_wallet_save_order_quote_to_session>
+                        <type>singleton</type>
+                        <class>minkasu_wallet/observer</class>
+                        <method>beforeSaveOrderQuoteToSession</method>
+                    </minkasu_wallet_save_order_quote_to_session>
+                </observers>
+	   </checkout_cart_save_before>
+	   <salesrule_validator_process>
+                <observers>
+                    <minkasu_wallet_save_order_quote_to_session>
+                        <type>singleton</type>
+                        <class>minkasu_wallet/observer</class>
+                        <method>salesRuleValidatorProcess</method>
+                    </minkasu_wallet_save_order_quote_to_session>
+                </observers>
+           </salesrule_validator_process>
+
             <controller_action_predispatch_checkout_onepage_index>
                 <observers>
                     <minkasu_wallet_show_notice>
@@ -72,6 +92,17 @@
                     </minkasu_wallet_show_notice>
                 </observers>
             </controller_action_predispatch_checkout_onepage_index>
+
+	   <controller_action_predispatch_checkout_cart_index>
+                <observers>
+                    <minkasu_wallet_show_notice>
+                        <type>singleton</type>
+                        <class>minkasu_wallet/observer</class>
+                        <method>predispatchCheckoutCartIndex</method>
+                    </minkasu_wallet_show_notice>
+                </observers>
+            </controller_action_predispatch_checkout_cart_index>
+
         </events>
     </global>
     <frontend>
@@ -125,7 +156,8 @@
                 <payment_action>authorize</payment_action>
                 <token backend_model="adminhtml/system_config_backend_encrypted"/>
                 <estimate_enabled>1</estimate_enabled>
-                <address_po_box_enabled>0</address_po_box_enabled>
+                <address_po_box_enabled>1</address_po_box_enabled>
+		<promo_codes></promo_codes>
             </minkasu_wallet>
         </payment>
     </default>
