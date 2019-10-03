@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/minkasu_smartphone_checkout",
+    "name": "OpenMageModuleFostering\/minkasu_smartphone_checkout",
     "type": "magento-module",
     "license": "MITL",
     "homepage": "",
     "description": "Enjoy higher conversion and greater security by offering a smartphone checkout option for your customers ",
     "authors": [
-    {
-        "name": "Minkasu Inc",
-        "email": "it-admin@minkasu.com"
-    }
-],
+        {
+            "name": "Minkasu Inc",
+            "email": "it-admin@minkasu.com"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
